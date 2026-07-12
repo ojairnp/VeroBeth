@@ -33,10 +33,13 @@ def listar_archivos(token, ruta):
     resp = requests.post(
         "https://api.dropboxapi.com/2/files/list_folder", headers=headers, json=data
     )
-    if resp.status_code == 409:
+        if resp.status_code == 409:
         print(f"AVISO: la carpeta '{ruta}' no existe en Dropbox, se omite.")
         return archivos
+    if resp.status_code == 400:
+        print(f"ERROR 400 en '{ruta}': {resp.text}")
     resp.raise_for_status()
+
     body = resp.json()
     archivos.extend(body["entries"])
     while body.get("has_more"):
