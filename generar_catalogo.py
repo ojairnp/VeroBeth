@@ -6,7 +6,7 @@ APP_KEY = os.environ["DROPBOX_APP_KEY"]
 APP_SECRET = os.environ["DROPBOX_APP_SECRET"]
 REFRESH_TOKEN = os.environ["DROPBOX_REFRESH_TOKEN"]
 
-BASE_FOLDER = ""  # AJUSTAR: ej. "/VeroBeth" si tus carpetas XS/S/M/L estan dentro de esa carpeta
+BASE_FOLDER = "VeroBeth"  # AJUSTAR: ej. "/VeroBeth" si tus carpetas XS/S/M/L estan dentro de esa carpeta
 TALLAS = ["XS", "S", "M", "L"]
 OUTPUT_PATH = "catalogo.json"
 
