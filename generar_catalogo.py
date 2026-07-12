@@ -6,9 +6,12 @@ APP_KEY = os.environ["DROPBOX_APP_KEY"]
 APP_SECRET = os.environ["DROPBOX_APP_SECRET"]
 REFRESH_TOKEN = os.environ["DROPBOX_REFRESH_TOKEN"]
 
-BASE_FOLDER = "/VeroBeth/catalogo"
-TALLAS = ["S", "M", "L"]
+BASE_FOLDER = ""  # AJUSTAR: ej. "/VeroBeth" si tus carpetas XS/S/M/L estan dentro de esa carpeta
+TALLAS = ["XS", "S", "M", "L"]
 OUTPUT_PATH = "catalogo.json"
+
+EXTENSIONES_IMG = (".jpg", ".jpeg", ".png", ".webp")
+EXTENSIONES_VIDEO = (".mp4", ".mov", ".m4v")
 
 def obtener_access_token():
     resp = requests.post(
@@ -31,6 +34,7 @@ def listar_archivos(token, ruta):
         "https://api.dropboxapi.com/2/files/list_folder", headers=headers, json=data
     )
     if resp.status_code == 409:
+        print(f"AVISO: la carpeta '{ruta}' no existe en Dropbox, se omite.")
         return archivos
     resp.raise_for_status()
     body = resp.json()
@@ -87,6 +91,14 @@ def slug_a_nombre(nombre_archivo):
     nombre = nombre.replace("-", " ").replace("_", " ")
     return nombre.strip().title()
 
+def tipo_de_archivo(nombre_archivo):
+    nombre_lower = nombre_archivo.lower()
+    if nombre_lower.endswith(EXTENSIONES_IMG):
+        return "imagen"
+    if nombre_lower.endswith(EXTENSIONES_VIDEO):
+        return "video"
+    return None
+
 def main():
     token = obtener_access_token()
     catalogo = []
@@ -94,18 +106,20 @@ def main():
     for talla in TALLAS:
         ruta = f"{BASE_FOLDER}/{talla}"
         archivos = listar_archivos(token, ruta)
-        archivos_img = [
-            a for a in archivos
-            if a["name"].lower().endswith((".jpg", ".jpeg", ".png", ".webp"))
-        ]
-        for archivo in archivos_img:
+        contador = 0
+        for archivo in archivos:
+            tipo = tipo_de_archivo(archivo["name"])
+            if tipo is None:
+                continue
             url = obtener_o_crear_link(token, archivo["path_lower"])
             catalogo.append({
                 "nombre": slug_a_nombre(archivo["name"]),
                 "talla": talla,
+                "tipo": tipo,
                 "imagen_url": url,
             })
-        print(f"Talla {talla}: {len(archivos_img)} imagenes procesadas")
+            contador += 1
+        print(f"Talla {talla}: {contador} archivos procesados")
 
     catalogo.sort(key=lambda x: (x["talla"], x["nombre"]))
 
