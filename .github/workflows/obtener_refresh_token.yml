@@ -1,0 +1,34 @@
+name: Obtener Refresh Token Dropbox
+
+on:
+  workflow_dispatch:
+    inputs:
+      auth_code:
+        description: "gaKwH03yKFwAAAAAAAABg6M5dAb5g2IeHX8ixFGPAHc"
+        required: true
+        type: string
+
+jobs:
+  obtener_token:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Intercambiar codigo por refresh token
+        env:
+          DROPBOX_APP_KEY: ${{ secrets.DROPBOX_APP_KEY }}
+          DROPBOX_APP_SECRET: ${{ secrets.DROPBOX_APP_SECRET }}
+          AUTH_CODE: ${{ github.event.inputs.auth_code }}
+        run: |
+          python3 -c "
+          import requests
+          resp = requests.post(
+              'https://api.dropbox.com/oauth2/token',
+              data={
+                  'code': '$AUTH_CODE',
+                  'grant_type': 'authorization_code',
+                  'client_id': '$DROPBOX_APP_KEY',
+                  'client_secret': '$DROPBOX_APP_SECRET',
+              },
+          )
+          print('STATUS:', resp.status_code)
+          print(resp.json())
+          "
