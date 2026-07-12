@@ -6,12 +6,13 @@ APP_KEY = os.environ["DROPBOX_APP_KEY"]
 APP_SECRET = os.environ["DROPBOX_APP_SECRET"]
 REFRESH_TOKEN = os.environ["DROPBOX_REFRESH_TOKEN"]
 
-BASE_FOLDER = "/VeroBeth"  # AJUSTAR: ej. "/VeroBeth" si tus carpetas XS/S/M/L estan dentro de esa carpeta
+BASE_FOLDER = ""
 TALLAS = ["XS", "S", "M", "L"]
 OUTPUT_PATH = "catalogo.json"
 
 EXTENSIONES_IMG = (".jpg", ".jpeg", ".png", ".webp")
 EXTENSIONES_VIDEO = (".mp4", ".mov", ".m4v")
+
 
 def obtener_access_token():
     resp = requests.post(
@@ -26,6 +27,7 @@ def obtener_access_token():
     resp.raise_for_status()
     return resp.json()["access_token"]
 
+
 def listar_archivos(token, ruta):
     headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
     archivos = []
@@ -33,13 +35,12 @@ def listar_archivos(token, ruta):
     resp = requests.post(
         "https://api.dropboxapi.com/2/files/list_folder", headers=headers, json=data
     )
-        if resp.status_code == 409:
+    if resp.status_code == 409:
         print(f"AVISO: la carpeta '{ruta}' no existe en Dropbox, se omite.")
         return archivos
     if resp.status_code == 400:
         print(f"ERROR 400 en '{ruta}': {resp.text}")
     resp.raise_for_status()
-
     body = resp.json()
     archivos.extend(body["entries"])
     while body.get("has_more"):
@@ -52,6 +53,7 @@ def listar_archivos(token, ruta):
         body = resp.json()
         archivos.extend(body["entries"])
     return [a for a in archivos if a[".tag"] == "file"]
+
 
 def obtener_o_crear_link(token, path_lower):
     headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
@@ -89,10 +91,12 @@ def obtener_o_crear_link(token, path_lower):
         url = url + "?raw=1"
     return url
 
+
 def slug_a_nombre(nombre_archivo):
     nombre = os.path.splitext(nombre_archivo)[0]
     nombre = nombre.replace("-", " ").replace("_", " ")
     return nombre.strip().title()
+
 
 def tipo_de_archivo(nombre_archivo):
     nombre_lower = nombre_archivo.lower()
@@ -101,6 +105,7 @@ def tipo_de_archivo(nombre_archivo):
     if nombre_lower.endswith(EXTENSIONES_VIDEO):
         return "video"
     return None
+
 
 def main():
     token = obtener_access_token()
@@ -131,6 +136,7 @@ def main():
         f.write(contenido.encode("utf-8"))
 
     print(f"catalogo.json generado con {len(catalogo)} productos")
+
 
 if __name__ == "__main__":
     main()
