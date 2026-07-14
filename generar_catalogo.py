@@ -85,11 +85,13 @@ def obtener_o_crear_link(token, path_lower):
             resp.raise_for_status()
             url = resp.json()["url"]
 
-    if "?dl=0" in url:
-        url = url.replace("?dl=0", "?raw=1")
-    elif "?" not in url:
-        url = url + "?raw=1"
+        if "dl=0" in url:
+        url = url.replace("dl=0", "raw=1")
+    elif "raw=1" not in url:
+        separador = "&" if "?" in url else "?"
+        url = url + separador + "raw=1"
     return url
+
 
 
 def slug_a_nombre(nombre_archivo):
