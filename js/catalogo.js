@@ -12,19 +12,18 @@ async function cargarCatalogo() {
 
 function crearTarjeta(producto) {
   const mensaje = encodeURIComponent(
-    'Hola, me interesa: ' + producto.nombre + ' talla ' + producto.talla
+    'Hola, me interesa un producto talla ' + producto.talla
   );
   const waLink = 'https://wa.me/5219985420424?text=' + mensaje;
 
   const media = producto.tipo === 'video'
     ? '<video src="' + producto.imagen_url + '" muted loop autoplay playsinline></video>'
-    : '<img src="' + producto.imagen_url + '" alt="' + producto.nombre + '" loading="lazy">';
+    : '<img src="' + producto.imagen_url + '" alt="Vero Beth talla ' + producto.talla + '" loading="lazy">';
 
   return (
     '<div class="producto-card" data-talla="' + producto.talla + '">' +
       media +
       '<div class="producto-info">' +
-        '<div class="producto-nombre">' + producto.nombre + '</div>' +
         '<div class="producto-talla">Talla ' + producto.talla + '</div>' +
         '<a class="producto-wa" href="' + waLink + '" target="_blank" rel="noopener">Preguntar disponibilidad</a>' +
       '</div>' +
