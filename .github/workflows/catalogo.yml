@@ -2,7 +2,7 @@ name: Actualizar Catalogo Dropbox
 
 on:
   schedule:
-    - cron: "*/15 * * * *"
+    - cron: "0 13 * * *"
   workflow_dispatch: {}
 
 permissions:
@@ -21,7 +21,7 @@ jobs:
           python-version: "3.11"
 
       - name: Instalar dependencias
-        run: pip install requests
+        run: pip install requests pillow
 
       - name: Generar catalogo.json
         env:
@@ -34,7 +34,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add catalogo.json
+          git add catalogo.json media
           git diff --staged --quiet || git commit -m "Actualizar catalogo desde Dropbox [skip ci]"
           git pull origin main --no-edit
           git push
