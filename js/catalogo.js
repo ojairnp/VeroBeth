@@ -11,8 +11,9 @@ async function cargarCatalogo() {
 }
 
 function crearTarjeta(producto) {
+  const urlCompleta = window.location.origin + producto.imagen_url;
   const mensaje = encodeURIComponent(
-    'Hola, me interesa un producto talla ' + producto.talla
+    'Hola, me interesa este producto (talla ' + producto.talla + '): ' + urlCompleta
   );
   const waLink = 'https://wa.me/5219985420424?text=' + mensaje;
 
@@ -31,18 +32,26 @@ function crearTarjeta(producto) {
   );
 }
 
+function ordenarVideosPrimero(productos) {
+  const videos = productos.filter(function (p) { return p.tipo === 'video'; });
+  const imagenes = productos.filter(function (p) { return p.tipo === 'imagen'; });
+  return videos.concat(imagenes);
+}
+
 function renderizar(productos, tallaSeleccionada) {
   const grid = document.getElementById('grid-productos');
   const filtrados = tallaSeleccionada === 'todo'
     ? productos
     : productos.filter(function (p) { return p.talla === tallaSeleccionada; });
 
-  if (filtrados.length === 0) {
+  const ordenados = ordenarVideosPrimero(filtrados);
+
+  if (ordenados.length === 0) {
     grid.innerHTML = '<p class="sin-resultados">No hay productos en esta talla por ahora.</p>';
     return;
   }
 
-  grid.innerHTML = filtrados.map(crearTarjeta).join('');
+  grid.innerHTML = ordenados.map(crearTarjeta).join('');
 }
 
 async function init() {
