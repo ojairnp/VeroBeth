@@ -252,3 +252,35 @@ a {
     justify-content: space-between;
   }
 }
+
+.about {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 50px 24px;
+  text-align: center;
+}
+
+.about-brand {
+  font-size: 18px;
+  letter-spacing: 0.15em;
+  margin-bottom: 20px;
+  font-weight: 500;
+}
+
+.about p {
+  font-size: 14px;
+  line-height: 1.8;
+  color: #555;
+  font-weight: 300;
+  margin-bottom: 16px;
+}
+
+.about-lema {
+  font-size: 13px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #1a1a1a;
+  font-weight: 400;
+  margin-top: 10px;
+}
+
