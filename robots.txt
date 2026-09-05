@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://verobethfit.netlify.app/sitemap.xml

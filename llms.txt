@@ -1,0 +1,15 @@
+# Vero Beth
+
+Vero Beth es una marca de ropa deportiva femenina y recomendaciones fitness con base en Cancún, Quintana Roo, México.
+
+## Páginas principales
+
+- Inicio: https://verobethfit.netlify.app/
+- Catálogo de ropa deportiva: https://verobethfit.netlify.app/catalogo.html
+- Accesorios y equipo fitness recomendados: https://verobethfit.netlify.app/recomendados.html
+
+## Temas
+
+Ropa deportiva femenina, accesorios fitness, equipo para gimnasio en casa, yoga, pilates, entrenamiento funcional, fuerza, cardio, movilidad y recuperación muscular.
+
+Los productos recomendados se compran en Mercado Libre. Algunos enlaces son de afiliado y el precio o la disponibilidad pueden cambiar.
