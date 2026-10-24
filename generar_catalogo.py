@@ -2,12 +2,11 @@ import requests
 import os
 import json
 import subprocess
+import hashlib
+import tempfile
 from io import BytesIO
-from PIL import Image
+from PIL import Image, ImageOps
 
-APP_KEY = os.environ["DROPBOX_APP_KEY"]
-APP_SECRET = os.environ["DROPBOX_APP_SECRET"]
-REFRESH_TOKEN = os.environ["DROPBOX_REFRESH_TOKEN"]
 
 BASE_FOLDER = "/VeroBeth"
 TALLAS = ["XS", "S", "M", "L"]
@@ -25,11 +24,12 @@ SEGUNDOS_VIDEO = 6
 def obtener_access_token():
     resp = requests.post(
         "https://api.dropbox.com/oauth2/token",
+        timeout=60,
         data={
-            "refresh_token": REFRESH_TOKEN,
+            "refresh_token": os.environ["DROPBOX_REFRESH_TOKEN"],
             "grant_type": "refresh_token",
-            "client_id": APP_KEY,
-            "client_secret": APP_SECRET,
+            "client_id": os.environ["DROPBOX_APP_KEY"],
+            "client_secret": os.environ["DROPBOX_APP_SECRET"],
         },
     )
     resp.raise_for_status()
@@ -41,9 +41,10 @@ def listar_archivos(token, ruta):
     archivos = []
     data = {"path": ruta, "recursive": False}
     resp = requests.post(
-        "https://api.dropboxapi.com/2/files/list_folder", headers=headers, json=data
+        "https://api.dropboxapi.com/2/files/list_folder", headers=headers, json=data, timeout=60
     )
-    if resp.status_code == 409:
+    if (resp.status_code == 409
+            and resp.json().get("error_summary", "").startswith("path/not_found/")):
         print(f"AVISO: la carpeta '{ruta}' no existe en Dropbox, se omite.")
         return archivos
     resp.raise_for_status()
@@ -54,6 +55,7 @@ def listar_archivos(token, ruta):
             "https://api.dropboxapi.com/2/files/list_folder/continue",
             headers=headers,
             json={"cursor": body["cursor"]},
+            timeout=60,
         )
         resp.raise_for_status()
         body = resp.json()
@@ -67,7 +69,7 @@ def descargar_archivo(token, path_lower):
         "Dropbox-API-Arg": json.dumps({"path": path_lower}),
     }
     resp = requests.post(
-        "https://content.dropboxapi.com/2/files/download", headers=headers
+        "https://content.dropboxapi.com/2/files/download", headers=headers, timeout=120
     )
     resp.raise_for_status()
     return resp.content
@@ -91,7 +93,7 @@ def tipo_de_archivo(nombre_archivo):
 
 def procesar_imagen(bytes_originales, ruta_salida):
     imagen = Image.open(BytesIO(bytes_originales))
-    imagen = imagen.convert("RGB")
+    imagen = ImageOps.exif_transpose(imagen).convert("RGB")
     if imagen.width > ANCHO_MAX_IMG:
         proporcion = ANCHO_MAX_IMG / imagen.width
         nuevo_alto = int(imagen.height * proporcion)
@@ -104,22 +106,26 @@ def procesar_video(bytes_originales, ruta_salida):
     with open(ruta_temporal, "wb") as f:
         f.write(bytes_originales)
 
-    subprocess.run(
-        [
-            "ffmpeg", "-y",
-            "-i", ruta_temporal,
-            "-t", str(SEGUNDOS_VIDEO),
-            "-vf", "scale=720:-2",
-            "-c:v", "libx264",
-            "-crf", "28",
-            "-preset", "fast",
-            "-c:a", "aac",
-            "-b:a", "96k",
-            ruta_salida,
-        ],
-        check=True,
-    )
-    os.remove(ruta_temporal)
+    try:
+        subprocess.run(
+            [
+                "ffmpeg", "-y",
+                "-i", ruta_temporal,
+                "-t", str(SEGUNDOS_VIDEO),
+                "-vf", "scale=720:-2",
+                "-c:v", "libx264",
+                "-crf", "28",
+                "-preset", "fast",
+                "-c:a", "aac",
+                "-b:a", "96k",
+                "-movflags", "+faststart",
+                ruta_salida,
+            ],
+            check=True,
+        )
+    finally:
+        if os.path.exists(ruta_temporal):
+            os.remove(ruta_temporal)
 
 
 def main():
@@ -139,7 +145,9 @@ def main():
             if tipo is None:
                 continue
 
-            slug = slug_archivo(archivo["name"])
+            identidad = archivo["path_lower"] + ":" + archivo["rev"]
+            version = hashlib.sha256(identidad.encode("utf-8")).hexdigest()[:16]
+            slug = (slug_archivo(archivo["name"])[:80] or "producto") + "-" + version
             extension = ".jpg" if tipo == "imagen" else ".mp4"
             ruta_local = os.path.join(carpeta_local, slug + extension)
             ruta_relativa = "/" + ruta_local.replace("\\", "/")
@@ -147,10 +155,16 @@ def main():
             if not os.path.exists(ruta_local):
                 print(f"Procesando: {archivo['name']}")
                 contenido = descargar_archivo(token, archivo["path_lower"])
-                if tipo == "imagen":
-                    procesar_imagen(contenido, ruta_local)
-                else:
-                    procesar_video(contenido, ruta_local)
+                temporal = ruta_local + ".tmp" + extension
+                try:
+                    if tipo == "imagen":
+                        procesar_imagen(contenido, temporal)
+                    else:
+                        procesar_video(contenido, temporal)
+                    os.replace(temporal, ruta_local)
+                finally:
+                    if os.path.exists(temporal):
+                        os.remove(temporal)
             else:
                 print(f"Ya existe, se omite: {archivo['name']}")
 
@@ -166,8 +180,12 @@ def main():
     catalogo.sort(key=lambda x: x["talla"])
 
     contenido_json = json.dumps(catalogo, ensure_ascii=False, indent=2)
-    with open(OUTPUT_PATH, "wb") as f:
-        f.write(contenido_json.encode("utf-8"))
+    with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8",
+                                     dir=os.path.dirname(OUTPUT_PATH) or ".",
+                                     delete=False) as f:
+        temporal = f.name
+        f.write(contenido_json)
+    os.replace(temporal, OUTPUT_PATH)
 
     print(f"catalogo.json generado con {len(catalogo)} productos")
 
