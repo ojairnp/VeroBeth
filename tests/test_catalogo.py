@@ -41,12 +41,15 @@ class CatalogoTests(unittest.TestCase):
         self.assertEqual(count, 1)
         self.assertEqual(primero, igual)
         self.assertNotEqual(primero[0]['imagen_url'], nuevo[0]['imagen_url'])
+        self.assertFalse(Path(primero[0]['imagen_url'].lstrip('/')).exists())
+        self.assertTrue(Path(nuevo[0]['imagen_url'].lstrip('/')).exists())
 
     def test_colisiones_y_eliminacion(self):
         datos, _ = self.generar([self.archivo('a b.png'), self.archivo('a-b.png')])
         self.assertEqual(len({p['imagen_url'] for p in datos}), 2)
         datos, _ = self.generar([])
         self.assertEqual(datos, [])
+        self.assertEqual(list(Path("media/S").iterdir()), [])
 
     def test_error_no_sobrescribe_catalogo(self):
         Path('catalogo.json').write_text('["previo"]')
@@ -55,6 +58,19 @@ class CatalogoTests(unittest.TestCase):
             with self.assertRaises(requests.HTTPError):
                 app.main()
         self.assertEqual(Path('catalogo.json').read_text(), '["previo"]')
+
+    def test_error_en_talla_posterior_conserva_medios(self):
+        previos, _ = self.generar([self.archivo()])
+        def listar(token, ruta):
+            if ruta.endswith('/L'):
+                raise requests.HTTPError('fallo en ultima talla')
+            return []
+        with patch.object(app, 'obtener_access_token', return_value='mock'), \
+             patch.object(app, 'listar_archivos', side_effect=listar):
+            with self.assertRaises(requests.HTTPError):
+                app.main()
+        self.assertEqual(json.loads(Path('catalogo.json').read_text()), previos)
+        self.assertTrue(Path(previos[0]['imagen_url'].lstrip('/')).exists())
 
     def test_solo_not_found_se_omite(self):
         for summary, missing in [('path/not_found/', True), ('path/not_folder/', False)]:
