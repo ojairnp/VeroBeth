@@ -22,3 +22,9 @@ python -m http.server 8000
 ```
 
 La conversión de videos requiere `ffmpeg` instalado. Las pruebas usan respuestas simuladas y no requieren credenciales de Dropbox.
+
+## Reducir consumo de Netlify
+
+La página conserva su dirección de Netlify, pero los scripts leen `catalogo.json` y los medios directamente desde la rama `main` de GitHub mediante `raw.githubusercontent.com`. Los commits de sincronización incluyen `[skip netlify]`, de modo que las actualizaciones diarias del catálogo no publican nuevos despliegues en Netlify. No quitar esa marca mientras se utilice este diseño. Los cambios de diseño o código del sitio sí necesitan un despliegue.
+
+Las visitas a HTML, CSS y JavaScript siguen utilizando Netlify. Este cambio evita los despliegues diarios y traslada las solicitudes del catálogo y medios a GitHub; no garantiza consumo total cero ni capacidad ilimitada. GitHub puede aplicar caché o límites de servicio. Si el catálogo remoto falla, se muestra un error en lugar de recurrir a un catálogo local antiguo.
