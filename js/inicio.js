@@ -1,7 +1,9 @@
+const CATALOGO_BASE_URL = 'https://raw.githubusercontent.com/ojairnp/VeroBeth/main/';
+
 async function cargarHero() {
   const contenedor = document.getElementById('hero-media');
   try {
-    const resp = await fetch('catalogo.json', { cache: 'no-store' });
+    const resp = await fetch(CATALOGO_BASE_URL + 'catalogo.json', { cache: 'no-store' });
     if (!resp.ok) throw new Error("Error HTTP del catálogo");
     const productos = await resp.json();
     if (!Array.isArray(productos)) throw new Error("Formato de catálogo inválido");
@@ -13,7 +15,7 @@ async function cargarHero() {
 
     const elegido = soloImagenes[Math.floor(Math.random() * soloImagenes.length)];
     const img = document.createElement('img');
-    img.src = elegido.imagen_url;
+    img.src = CATALOGO_BASE_URL + elegido.imagen_url.replace(/^\/+/, '');
     img.alt = 'Vero Beth';
     img.className = 'hero-img';
     contenedor.innerHTML = '';
