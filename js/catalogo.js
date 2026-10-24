@@ -1,11 +1,17 @@
+const CATALOGO_BASE_URL = 'https://raw.githubusercontent.com/ojairnp/VeroBeth/main/';
+
 async function cargarCatalogo() {
   const grid = document.getElementById('grid-productos');
   try {
-    const resp = await fetch('catalogo.json', { cache: 'no-store' });
+    const resp = await fetch(CATALOGO_BASE_URL + 'catalogo.json', { cache: 'no-store' });
     if (!resp.ok) throw new Error("Error HTTP del catálogo");
     const productos = await resp.json();
     if (!Array.isArray(productos)) throw new Error("Formato de catálogo inválido");
-    return productos;
+    return productos.map(function (producto) {
+      return Object.assign({}, producto, {
+        imagen_url: CATALOGO_BASE_URL + producto.imagen_url.replace(/^\/+/, '')
+      });
+    });
   } catch (err) {
     grid.innerHTML = '<p class="sin-resultados">No se pudo cargar el catalogo.</p>';
     return null;
