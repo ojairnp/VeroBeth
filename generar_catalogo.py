@@ -128,6 +128,21 @@ def procesar_video(bytes_originales, ruta_salida):
             os.remove(ruta_temporal)
 
 
+def limpiar_medios(catalogo):
+    """Eliminar copias obsoletas solo tras completar todas las tallas."""
+    vigentes = {os.path.normpath(p["imagen_url"].lstrip("/")) for p in catalogo}
+    eliminados = 0
+    for talla in TALLAS:
+        carpeta = os.path.join(MEDIA_DIR, talla)
+        with os.scandir(carpeta) as entradas:
+            for entrada in entradas:
+                if (entrada.is_file(follow_symlinks=False)
+                        and os.path.normpath(entrada.path) not in vigentes):
+                    os.remove(entrada.path)
+                    eliminados += 1
+    print(f"Medios antiguos eliminados: {eliminados}")
+
+
 def main():
     token = obtener_access_token()
     catalogo = []
@@ -186,6 +201,7 @@ def main():
         temporal = f.name
         f.write(contenido_json)
     os.replace(temporal, OUTPUT_PATH)
+    limpiar_medios(catalogo)
 
     print(f"catalogo.json generado con {len(catalogo)} productos")
 
