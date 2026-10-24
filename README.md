@@ -8,7 +8,7 @@ El workflow **Actualizar Catalogo Dropbox** se ejecuta diariamente a las 13:00 U
 
 Requiere los secretos `DROPBOX_APP_KEY`, `DROPBOX_APP_SECRET` y `DROPBOX_REFRESH_TOKEN` del repositorio. Nunca guardar tokens en archivos ni imprimirlos en registros. Se retiró el antiguo workflow de intercambio OAuth porque imprimía credenciales; si se utilizó, revisar su exposición y renovar el token correspondiente desde Dropbox.
 
-Cada archivo usa su ruta y revisión de Dropbox para generar una URL única. Los archivos nuevos o reemplazados se convierten; los que conservan la revisión se reutilizan. Los eliminados en Dropbox dejan de aparecer en el siguiente catálogo. Los medios históricos se conservan para evitar romper enlaces de WhatsApp ya compartidos.
+Cada archivo usa su ruta y revisión de Dropbox para generar una URL única. Los archivos nuevos o reemplazados se convierten; los que conservan la revisión se reutilizan. Los eliminados en Dropbox dejan de aparecer en el siguiente catálogo. Las copias locales antiguas se eliminan de `media/XS`, `media/S`, `media/M` y `media/L` después de completar todas las tallas. El catálogo y los medios publicados reflejan únicamente los archivos actuales de Dropbox. Los enlaces antiguos compartidos por WhatsApp dejarán de funcionar cuando se retire su archivo. El historial de commits de GitHub conserva las versiones anteriores; no se reescribe ese historial.
 
 Una carpeta inexistente se omite; otros errores de API o conversión detienen la ejecución y conservan el catálogo anterior. El JSON se publica solo al completar todas las tallas. La primera ejecución tras esta corrección vuelve a convertir los archivos existentes para registrar sus revisiones.
 
