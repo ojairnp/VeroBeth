@@ -27,7 +27,7 @@ function crearTarjeta(producto) {
   const waLink = 'https://wa.me/5219985420424?text=' + mensaje;
 
   const media = producto.tipo === 'video'
-    ? '<video src="' + ruta + '" muted loop controls playsinline preload="none"></video>'
+    ? '<video src="' + ruta + '" autoplay muted loop controls playsinline preload="metadata"></video>'
     : '<img src="' + ruta + '" alt="Vero Beth talla ' + talla + '" loading="lazy">';
 
   return (
