@@ -1,8 +1,10 @@
 async function cargarHero() {
   const contenedor = document.getElementById('hero-media');
   try {
-    const resp = await fetch('/catalogo.json');
+    const resp = await fetch('catalogo.json', { cache: 'no-store' });
+    if (!resp.ok) throw new Error("Error HTTP del catálogo");
     const productos = await resp.json();
+    if (!Array.isArray(productos)) throw new Error("Formato de catálogo inválido");
     const soloImagenes = productos.filter(function (p) { return p.tipo === 'imagen'; });
 
     if (soloImagenes.length === 0) {
